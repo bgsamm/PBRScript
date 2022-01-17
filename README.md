@@ -1,9 +1,23 @@
 # What is PBRScript?
 PBRScript is a scripting language designed to simplify the process of extending Pokémon Battle Revolution's code. PBRScript provides a high-level syntax for implementing new game logic while still allowing for direct interaction with the game's existing assembly.
 
+# Using PBRScript
+
+PBRScript files are text files with the extension `.pbr`. To compile a `.pbr` file, run `build.py` and call `build(path, address)`, where `path` is the filepath to your `.pbr` file and `address` is the memory address the resulting assembly code will be inserted at (note that this insertion is not handled by PBRScript). The program will create two output files, a `.asm` file containing the resulting assembly code and a `.bin` file containing the corresponding machine code, each with the same name as the original `.pbr` file.
+
+Included in the repository is `pbrscript-npp.xml`, a User-Defined Language file for use with Notepad++ that provides syntax-highlighting for the language:
+
+<img src="https://user-images.githubusercontent.com/8357867/149698570-e9c72654-5316-4936-b62c-f40b8b3daf02.png" width="250">
+
 # PBRScript Syntax
 
-Jump links: [Comments](#comments) | [Function definitions](#function-definitions) | [Variable assignment](#variable-assignment) | [Array allocation](#array-allocation) | [Pointer](#pointers) | [Expressions](#expressions) | [Conditions](#conditions) | [Function calls](#function-calls) | [If-Elif-Else blocks](#if-elif-else-blocks) | [For loops](#for-loops) | [While loops](#while-loops) | [Switch blocks](#switch-blocks) | [Memory Reading/Writing](#memory-readingwriting)
+Jump links: [Metadata tags](#metadata-tags) | [Comments](#comments) | [Function definitions](#function-definitions) | [Numeric literals](#numeric-literals) | [Variable assignment](#variable-assignment) | [Array allocation](#array-allocation) | [Pointer](#pointers) | [Expressions](#expressions) | [Conditions](#conditions) | [Function calls](#function-calls) | [If-Elif-Else blocks](#if-elif-else-blocks) | [For loops](#for-loops) | [While loops](#while-loops) | [Switch blocks](#switch-blocks) | [Memory Reading/Writing](#memory-readingwriting)
+
+### Metadata tags
+```
+<region="ntsc-u">
+```
+All PBRScript files must start with a region tag indicating which region the script targets. The value must be one of `ntsc-j`, `ntsc-u`, or `pal`.
 
 ### Comments
 ```
@@ -20,6 +34,11 @@ return <returnValue>
 Functions are defined using the `def` keyword, followed by a function name and a list of comma-separated parameters in parentheses. Parameters should be preceded by either the `int` or `float` keywords to indicate the type of the incoming parameter. Function definitions end with the `return` keyword, which may optionally be followed by a variable to be returned by the function. 
 
 **Note:** function names *must* begin with an upper-case letter and can contain a combination of numbers, letters, and underscores.
+
+### Numeric literals
+PBRScript supports both decimal and hexadecimal `int` literals. Hexadecimal literals should be prepended by `0x` (e.g. `0xabcdef`).
+
+**Note:** `float` literals are not currently supported.
 
 ### Variable assignment
 ```
@@ -86,7 +105,7 @@ The list of mnemonics available for use in comparisons are listed in the followi
 ```
 call <FUNCTION_NAME>(<param1>, <param2>, ...)
 ```
-Functions can be called using the `call` keyword, followed by the function name and a list of comma-separated arguments. Arguments can be variables, numbers, or pointers.
+Functions can be called using the `call` keyword, followed by the function name and a list of comma-separated arguments. Arguments can be variables, numbers, or pointers. Functions from PBR's existing assembly can be called by prepending the function's memory address (in hexadecimal) by `FUN_` (e.g. `FUN_80004000`).
 
 ### If-Elif-Else blocks
 ```
