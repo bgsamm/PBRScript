@@ -182,7 +182,7 @@ class Parser:
                 case = self._next_expression().value
                 cases.add(case)
                 body = self._parse_block(['case', 'break', 'switch'])
-                if len(body) > 0:
+                if self.lexer.next[1] == 'break':
                     blocks.append(Case(tuple(cases), body))
                     next(self.lexer) # discard 'break'
                     cases = set()

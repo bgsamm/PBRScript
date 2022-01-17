@@ -439,7 +439,7 @@ class Assembler:
                     asm[i] = re.sub(f'@{type}\({name}\)', regs[name], asm[i])
         return asm
 
-    # groups connected sections of code, i.e.
+    # groups connected sections of code, i.e. lines
     # of code that are not separated by calls
     def _group_lines(self, asm):
         lines_left = set(range(len(asm)))
@@ -537,7 +537,7 @@ class Assembler:
                 if (switch := re.search(r'@SWITCH\(([0-9]+)\)', line)):
                     switch_idx = int(switch.group(1))
                     branch_idx = int(branch.group(1))
-                    if branch_idx in self.switches[switch_idx].values():
+                    if branch_idx in self.switches[switch_idx]['cases'].values():
                         visited |= self._make_interference_graph_r(asm, group, i,
                                                                    live.copy(),
                                                                    graph, loop)
@@ -951,7 +951,7 @@ class Assembler:
                     rot = 32 - const
                     start = min(start + const, 31)
                     end = min(end + const, 31)
-                asm[-1] = f'rlwinm @INT({args[1]}), @INT({args[2]}), {hex(rot)}, {hex(start)}, {hex(end)}'
+                asm[-1] = f'rlwinm @INT({dest}), @INT({args[2]}), {hex(rot)}, {hex(start)}, {hex(end)}'
             else:
                 op = op_imm_to_asm[op.operator]
                 asm.append(f'{op} @INT({dest}), @INT({vars[0]}), {hex(const)}')
