@@ -17,7 +17,7 @@ class Compiler:
     def _compile_line(self, line):
         tokens = self._split_line(line)
         op = tokens[0]
-        if op in ['add', 'sub', 'divw', 'neg']:
+        if op in ['add', 'sub', 'mullw', 'divw', 'neg']:
             return self._compile_math(tokens)
         elif op in ['addi', 'subi', 'mulli']:
             return self._compile_math_immediate(tokens)
@@ -73,6 +73,8 @@ class Compiler:
         elif op == 'sub':
             suffix = 40
             A, B = (B, A)
+        elif op == 'mullw':
+            suffix = 235
         elif op == 'divw':
             suffix = 491
         elif op == 'neg':
@@ -235,6 +237,7 @@ class Compiler:
     def _compile_load_immediate(self, tokens):
         op = tokens[0]
         D = int(tokens[1][1:])
+        # A = 0
         SIMM = int(tokens[2], 16)
         prefix = 14
         if op == 'lis':

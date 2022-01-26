@@ -24,8 +24,6 @@ def build(path, addr):
     bin = compiler.compile()
     with open(f'{name}.bin', 'wb+') as f:
         f.write(bin)
-##    compiler = Compiler(asm)
-##    compiler.compile()
     print('Built successfully!')
 ##    print()
 ##    for line in asm:

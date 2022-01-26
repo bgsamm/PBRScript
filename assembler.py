@@ -390,7 +390,7 @@ class Assembler:
         for line in block:
             # this pattern intentionally ignores
             # generated variables (those bookended by _)
-            pattern = r'@(INT|FLOAT)\(([a-zA-Z0-9]+)\)'
+            pattern = r'@(INT|FLOAT)\(([a-z][_a-zA-Z0-9]*)\)'
             vars = re.findall(pattern, line)
             for type, name in vars:
                 if op_sets_var(line, name, False) or states[name]:
@@ -641,8 +641,10 @@ class Assembler:
         else:
             arg1 = node.left
         if type(node.right) is Number:
+            # cmpwi will treat a number > 0x7fff as negative
+            op = 'cmpwi' if node.right.value < 0x8000 else 'cmplwi'
             # floats cannot be compared with literals
-            asm.append(f'cmpwi @INT({arg1}), {node.right}')
+            asm.append(f'{op} @INT({arg1}), {node.right}')
         else:
             op = 'fcmpu cr0,' if node.type == 'float' else 'cmpw'
             type_ = node.type.upper()
