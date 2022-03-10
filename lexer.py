@@ -81,7 +81,8 @@ class Lexer:
     def _is_reserved(self, token):
         return token in ['alloc', 'and', 'break', 'call', 'case', 'continue',
                          'def', 'elif', 'else', 'end', 'for', 'fset', 'if',
-                         'in', 'or', 'range', 'return', 'set', 'switch', 'while']
+                         'import', 'in', 'or', 'range', 'return', 'set',
+                         'switch', 'while']
 
     def _is_loadstore(self, token):
         return token in ['lbz', 'lbzu', 'lfd', 'lfdu', 'lfs', 'lfsu',

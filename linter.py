@@ -1,5 +1,6 @@
-import re
+import os, re, sys
 from lexer import Lexer
+from reader import Reader
 from data.classes import *
 import data.pbr_globals as globals_
 import data.ops as ops
@@ -7,9 +8,14 @@ import data.ops as ops
 def is_operand(type):
     return type in ['number', 'variable', 'array[]', 'cast', 'operation']
 
+def path_in_set(paths, path):
+    return any(os.path.samefile(f, path) for f in paths)
+
 class Linter:
     def __init__(self, reader):
+        self.path = reader.path
         self.lexer = Lexer(reader)
+        self.region = None
 
     def _get_operand_type(self, expr):
         if expr[0] == 'number':
@@ -26,32 +32,67 @@ class Linter:
             type_ = expr[4]
         return type_
 
-    def lint(self):
-        print('Linting...')
-        region = None
-        self.functions = set()
-        self.function_uses = {}
-        while self.lexer.next is not None:
+    def lint(self, linted=None):
+        # tags
+        while self.lexer.next is not None \
+              and self.lexer.next[1] not in ['import', 'def']:
             type_, token = next(self.lexer)
             if type_ == '<':
                 tag, value = self._lint_tag()
                 if tag == 'region':
-                    if region is not None:
-                        self.throw(f"Cannot have multiple region tags")
-                    region = value
-            elif token == 'def':
-                if region is None:
-                    self.throw(f"Missing region tag")
-                self._lint_def()
+                    if self.region is not None:
+                        self.throw(f"A script file cannot have multiple region tags")
+                    self.region = value
             elif type_ != '\n':
                 self.throw(f"Statements cannot appear outside of function bodies")
-        for func in sorted(self.function_uses,
-                           key=lambda x: self.function_uses[x]):
-            if not func.startswith('FUN_') and func not in self.functions \
-               and func not in globals_.functions[region]:
-                self.throw(f"Function '{func}' is not defined",
-                           line=self.function_uses[func])
-        print('Done.')
+        if self.region is None:
+            self.throw(f"Missing region tag")
+        # imports
+        imports = set()
+        while self.lexer.next is not None \
+              and self.lexer.next[1] != 'def':
+            type_, token = next(self.lexer)
+            if token == 'import':
+                path = self._lint_import()
+                if path_in_set(imports, path):
+                    self.throw(f"Duplicate import")
+                imports.add(path)
+            elif type_ == '<':
+                self.throw(f"Tags must appear at the start of the file")
+            elif type_ != '\n':
+                self.throw(f"Statements cannot appear outside of function bodies")
+        # functions
+        self.functions = set()
+        self.function_uses = {}
+        while self.lexer.next is not None:
+            type_, token = next(self.lexer)
+            if token == 'def':
+                self._lint_def()
+            elif type_ == '<':
+                self.throw(f"Tags must appear at the start of the file")
+            elif type_ != '\n':
+                self.throw(f"Statements cannot appear outside of function bodies")
+
+        # lint imported scripts recursively
+        if linted is None:
+            linted = set()
+        if not path_in_set(linted, self.path):
+            linted.add(self.path)
+            for path in imports:
+                with Reader(path) as reader:
+                    linter = Linter(reader)
+                    linter.lint(linted)
+                    self.functions |= linter.functions
+            # only validate function uses the first time a script is
+            # visited since future visits won't visit imports
+            for func in sorted(self.function_uses,
+                               key=lambda x: self.function_uses[x]):
+                if not func.startswith('FUN_') \
+                   and func not in self.functions \
+                   and func not in globals_.functions[self.region]:
+                    self.throw(f"Function '{func}' is not defined",
+                               line=self.function_uses[func])
+        self.files = linted
 
     def _next_expression(self, expr=None, stop=False):
         if self.lexer.next[0] in ',):=\n':
@@ -204,6 +245,18 @@ class Linter:
             self.throw(f"Tags must be on their own line")
         return (tag, value.lower())
 
+    def _lint_import(self):
+        type_, path = next(self.lexer)
+        if type_ != 'string':
+            self.throw(f"Invalid import statement")
+        if not os.path.exists(path):
+            self.throw(f"No such file: '{path}'")
+        elif os.path.samefile(self.path, path):
+            self.throw(f"Attempted self-import")
+        if next(self.lexer)[0] != '\n':
+            self.throw(f"Invalid import statement")
+        return path
+
     def _lint_def(self):
         self.variables = {}
         self.in_loop = False
@@ -211,7 +264,10 @@ class Linter:
 
         type_, name = next(self.lexer)
         if type_ != 'function':
-            self.throw(f"Invalid function name '{name}'")
+            msg = f"Invalid function name '{name}'"
+            if type_ == 'variable':
+                msg += " - function names must start with a capital letter"
+            self.throw(msg)
         elif name.startswith('FUN_'):
             self.throw(f"Invalid function name '{name}'; the prefix 'FUN_' is reserved for global function references")
         elif name in self.functions:
@@ -521,6 +577,7 @@ class Linter:
         return token
 
     def throw(self, msg, line=None):
-        if line is not None:
-            raise Exception(f'{msg} (line {line})')
-        raise Exception(f'{msg} (line {self.lexer.line})')
+        if line is None:
+            line = self.lexer.line
+        fname = os.path.split(self.path)[1]
+        sys.exit(f"[{fname}] {msg} (line {line})")

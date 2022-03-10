@@ -22,22 +22,23 @@ class Parser:
         self.lexer = Lexer(reader)
 
     def parse(self):
-        print('Parsing...')
         tree = []
         while self.lexer.next is not None:
             # ignore empty lines
             if self.lexer.next[0] == '\n':
                 next(self.lexer)
             elif self.lexer.next[0] == '<':
+                # skip over the tag
                 next(self.lexer) # discard '<'
-                tag, value = self._parse_tag()
-                if tag == 'region':
-                    region = value.lower()
+                self._parse_tag()
+            elif self.lexer.next[1] == 'import':
+                # skip over the import
+                next(self.lexer)
+                next(self.lexer)
             else:
                 expr = self._next_expression()
                 tree.append(expr)
-        print('Done.')
-        return region, tree
+        return tree
 
     def _next_expression(self, expr=None):
         if self.lexer.next is None:
