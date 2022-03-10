@@ -11,7 +11,7 @@ Included in the repository is `pbrscript-npp.xml`, a User-Defined Language file 
 
 # PBRScript Syntax
 
-Jump links: [Metadata tags](#metadata-tags) | [Comments](#comments) | [Function definitions](#function-definitions) | [Numeric literals](#numeric-literals) | [Variable assignment](#variable-assignment) | [Array allocation](#array-allocation) | [Pointer](#pointers) | [Expressions](#expressions) | [Conditions](#conditions) | [Function calls](#function-calls) | [If-Elif-Else blocks](#if-elif-else-blocks) | [For loops](#for-loops) | [While loops](#while-loops) | [Switch blocks](#switch-blocks) | [Memory Reading/Writing](#memory-readingwriting)
+Jump links: [Metadata tags](#metadata-tags) | [Comments](#comments) | [Imports](#imports) | [Function definitions](#function-definitions) | [Numeric literals](#numeric-literals) | [Variable assignment](#variable-assignment) | [Array allocation](#array-allocation) | [Pointer](#pointers) | [Expressions](#expressions) | [Conditions](#conditions) | [Function calls](#function-calls) | [If-Elif-Else blocks](#if-elif-else-blocks) | [For loops](#for-loops) | [While loops](#while-loops) | [Switch blocks](#switch-blocks) | [Memory Reading/Writing](#memory-readingwriting)
 
 ### Metadata tags
 ```
@@ -24,6 +24,12 @@ All PBRScript files must start with a region tag indicating which region the scr
 // this is a comment
 ```
 Comments are preceded by `//` followed by a space. They may appear at the end of lines or stand alone on their own line.
+
+### Imports
+```
+import "path/to/file.pbr"
+```
+Imports provide the ability to break up programs across multiple files. An import statement consists of the `import` keyword followed by the path to the `.pbr` file to be imported, surrounded by quotes.
 
 ### Function definitions
 ```
