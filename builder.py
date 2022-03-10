@@ -6,6 +6,7 @@ from assembler import Assembler
 from compiler import Compiler
 
 def build(path, addr):
+    path = os.path.abspath(path)
     os.chdir(os.path.dirname(path))
     name, ext = os.path.splitext(path)
     if ext != '.pbr':
